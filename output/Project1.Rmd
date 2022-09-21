@@ -1,0 +1,365 @@
+---
+title: "Progression of Views on Property and Feminism in Philosophical History"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+  
+```{r, message=FALSE, warning=FALSE,echo=FALSE,error=TRUE}
+# load packages
+library(scales)
+library(plotrix)
+library(ggplot2)
+library(tidyverse)
+library(tidytext)
+library(wordcloud)
+library(tokenizers)
+library(dplyr)
+library(stopwords)
+
+phil=read.csv("Documents/philosophy_data.csv")
+```
+
+First,I process the raw textual data ‘philosophy_data.csv’ saved in $ data $ file by removing stopwords and adding desired word counts for desired word subsets to generate the dataset for this report.
+
+## Question 1: How heavily do different schools of philosophy approach and focus on the nature of property?
+
+Throughout history, the concept of property has been an entity that is focused on in major legal documents, and is often the source of the largest conflicts that we see even today, from conflicts regarding land, intellectual property, cyberspace, and business patents etc. However, discussion and focus on property is not a new phenomenon but is discussed frequently but differently in many schools of philosophy.
+
+I tried to explore which schools of philosophy focused most heavily on property and understand the time period and contexts during that school's ideological reign.
+
+```{r, message=FALSE, warning=FALSE,echo=FALSE,error=TRUE}
+# Set Example of words associated with property that could be seen in the philosophical texts
+
+word= c("property","wealth","ownership","plot","tract","home","goods","house","equity","estate", "state","own","possess","possession", "communal","community","propriety","purchase","confiscate","divest","power")
+
+# Add column to Philosophy data with word counts of words associated with Property
+phil= phil%>%  mutate(
+    word_occurrence_prop = str_count(tokenized_txt, word)) 
+
+# Aggregate the Property Word Counts by Different Philosophy Schools to see which one mentions property the most
+prop_school=as.data.frame.table(tapply(phil$word_occurrence_prop, phil$school, FUN=sum))
+prop_school= prop_school %>% mutate(word_occurrence_proportion= Freq/sum(Freq))
+
+#Plot Bar Graph of Proportions of Property mentions by school to normalize data
+prop_school_plot<-ggplot(data=prop_school, aes(x=Var1, y=Freq), fill=Var1) +
+  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip()+ ggtitle("Frequency of Words Associated with' Property' by School" ) +
+  xlab("Frequency") + ylab("Philosophical School")
+prop_school_plot
+#Plot Pie Chart Visualization of data
+prop_school_pie= pie3D(prop_school$word_occurrence_proportion,labels=prop_school$Var1,explode=0.01,labelcex=0.7,
+   main="Pie Chart of Schools Property Mentions ")
+prop_school_pie
+
+prop_author=as.data.frame.table(tapply(phil$word_occurrence_prop, phil$author, FUN=sum))
+prop_author= prop_author %>% mutate(word_occurrence_proportion= Freq/sum(Freq))
+prop_author_plot<-ggplot(data=prop_author, aes(x=Var1, y=Freq), fill=Var1) +
+  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip()+ ggtitle("Frequency of Words Associated with' Property' by Author" ) +
+  xlab("Frequency") + ylab("Author")
+prop_author_plot
+
+
+```
+
+The bar chart and pie chart show that the philosophical schools with the words most associated with the topic of property were German Idealism and Aristotle respectively. The second bar chart shows that the authors most associated with the topic of property were Aristotle, Hegel, and Plato.
+
+## Question 2: How do different schools of philosophy view property?
+
+From my first analyses, I found that the German Idealism and Aristotle philosophical schools showed the most mentions of the topic of "property" in their texts. However, I wanted to know what words they used when talking about property and the tone and themes that those words evoked. 
+
+Thus, I subsetted the philosophical data for the schools of German Idealism, Aristotle, and Feminism, and computed word counts for each word in sentences that mentioned at least one of the words associated with property. Then, I removed stop words and created word cloud plots for the words most heavily used in these contexts.
+
+```{r, error=TRUE}
+
+# Isolate data for Philosophy School with most mentions of words associated with "property"
+phil_german_idealism=phil[phil$school=="german_idealism",]
+
+# Isolate sentences that mention words associated with "property"
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_german_idealism$tokenized_txt)){
+  for(j in seq_along(word)){
+     if(grepl(word[j],phil_german_idealism$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_german_idealism_prop=phil_german_idealism[rows_to_keep,]
+
+#Remove Stop words and count each of the words remaining
+bag_of_words_german_idealism_prop= phil_german_idealism_prop%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_german_idealism_prop= bag_of_words_german_idealism_prop %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+word_count_german_idealism_prop= bag_of_words_german_idealism_prop %>% count(word_new, sort = TRUE)
+
+rows_to_keep=c()
+for(i in seq_along(bag_of_words_german_idealism$word_new)){
+  for(j in seq_along(word)){
+     if(bag_of_words_german_idealism$word_new[i]==word[j]){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+bag_of_words_german_idealism=bag_of_words_german_idealism[rows_to_keep,]
+
+#Repeat steps for Aristotle school
+phil_aristotle=phil[phil$school=="aristotle",]
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_aristotle$tokenized_txt)){
+  for(j in seq_along(word)){
+     if(grepl(word[j],phil_aristotle$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_aristotle_prop=phil_aristotle[rows_to_keep,]
+bag_of_words_aristotle_prop= phil_aristotle_prop%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_aristotle_prop= bag_of_words_aristotle_prop %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+word_count_aristotle_prop= bag_of_words_aristotle_prop %>% count(word_new, sort = TRUE)
+
+# Repeat Steps for Feminism School
+phil_feminism=phil[phil$school=="feminism",]
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_feminism$tokenized_txt)){
+  for(j in seq_along(word)){
+     if(grepl(word[j],phil_feminism$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+
+phil_feminism_prop=phil_feminism[rows_to_keep,]
+bag_of_words_feminism_prop= phil_feminism_prop%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_feminism_prop= bag_of_words_feminism_prop %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+word_count_feminism_prop= bag_of_words_feminism_prop %>% count(word_new, sort = TRUE)
+
+```
+
+The word cloud for German Idealism showed that the words most associated with property included "power", "reason","nature", and "universal". This fact helped me understand that the German Idealism discussion of property involved thought on the issues of access and what is prescribed by natural order.
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE,error=TRUE}
+wordcloud(word_count_german_idealism_prop$word_new,word_count_german_idealism_prop$n ,
+          scale=c(3,0.1),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+The word cloud associated with the Aristotle philosophical school was similar in its emphasis on "power", "nature", but it also focused on the ideas of "wealth" and "possession", showing this school's focus on the role of property in society and consequently with law.
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE, error=TRUE}
+wordcloud(word_count_aristotle_prop$word_new,word_count_aristotle_prop$n ,
+          scale=c(3,0.1),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+The word cloud for the Feminist school on the topic of property differed significantly from that of the German Idealism and Aristotle philosophical schools. The most prevalent word, as expected, was on "women" and "woman" but while it also had an emphasis on the idea of "power", the remaining words revolved around the concept of family, with "husband","mother", "children", and "love" also being included. This showed that the Feminist school's view of property was focused on different sphere of society, in domestic life, and rather how property was seen and understood in an individual family unit. This difference in focus between the schools on a topic like property made me wonder how the topic of femininity and womenhood in general differed between the schools and in different periods of time.
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE, error=TRUE}
+wordcloud(word_count_feminism_prop$word_new,word_count_feminism_prop$n ,
+          scale=c(3,0.1),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+## Question 3: How heavily do different schools of philosophy focus on the role of gender in society?
+  Understanding how the feminist school views and tone in regards to property differed to schools of philosophy from earlier time periods, I sought to understand how heavily the topic of gender and specifically femininity was emphasized by different schools in philosophy and more specifically by different authors throughout history.
+  I first formulated a word list associated with women and femininity and counted how often these words appeared in the tokenized_text column of the philosophical data. Then, I summed the word counts for these words by philosophical schools and authors, to see which of each category had the highest count of words associated with femininity.
+  
+```{r, error=TRUE}
+word2= c("sex", "female","woman","women","lady","ladies","girl","girls","wife","wives","mistress","gender", "feminine","femininity","pretty")
+phil= phil%>%  mutate(
+    word_occurrence_fe = str_count(tokenized_txt, word2)) 
+
+fe_school=as.data.frame.table(tapply(phil$word_occurrence_fe, phil$school, FUN=sum))
+fe_school= fe_school %>% mutate(word_occurrence_proportion= Freq/sum(Freq))
+fe_school_plot<-ggplot(data=fe_school, aes(x=Var1, y=Freq), fill=Var1) +
+  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip() + ggtitle("Frequency of Words Associated with 'Women' by School" ) +
+  xlab("Frequency") + ylab("Philosophical School")
+fe_school_plot
+
+fe_author=as.data.frame.table(tapply(phil$word_occurrence_fe, phil$author, FUN=sum))
+fe_author= fe_author %>% mutate(word_occurrence_proportion= Freq/sum(Freq))
+fe_author_plot<-ggplot(data=fe_author, aes(x=Var1, y=Freq), fill=Var1) +
+  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip()+ ggtitle("Frequency of Words Associated with 'Women' by School" ) +
+  xlab("Frequency") + ylab("Author")
+fe_author_plot
+
+```
+
+The first bar chart show that the philosophical school with the words most associated with the topic of femininity was, as expected, feminism. To dive deeper into the schools, the second bar chart shows that the authors most associated with the topic of property were Beauvoir, Davis, Wollstonecraft, and Aristotle.
+
+## Question 4: How do different schools of philosophy and authors view the role of women in society?
+After observing that Wollstonecraft, Beauvoir, and Aristotle showed the highest word counts of words associated with femininity, I sought to understand how each author differed in their tone and context in speaking about women, especially between Aristotle and the feminist writers. 
+I first isolated a subset of the philosophical data that corresponds to each author, and kept only the sentences that mentioned at least one word associated with women. Then, I removed the stop words and the words "women" and "woman", as these are common subject nouns in these sentences, to see what other words were associated with femininity and how the tone differed between the three authors.
+
+```{r,error=TRUE}
+
+phil_aristotle_auth=phil[phil$author=="Aristotle",]
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_aristotle_auth$tokenized_txt)){
+  for(j in seq_along(word2)){
+     if(grepl(word2[j],phil_aristotle_auth$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_aristotle_fe=phil_aristotle_auth[rows_to_keep,]
+bag_of_words_aristotle_fe= phil_aristotle_fe%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_aristotle_fe= bag_of_words_aristotle_fe %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+word_count_aristotle_fe= bag_of_words_aristotle_fe %>% count(word_new, sort = TRUE)
+
+phil_woll_auth=phil[phil$author=="Wollstonecraft",]
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_woll_auth$tokenized_txt)){
+  for(j in seq_along(word2)){
+     if(grepl(word2[j],phil_woll_auth$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_woll_fe=phil_woll_auth[rows_to_keep,]
+bag_of_words_woll_fe= phil_woll_fe%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_woll_fe= bag_of_words_woll_fe %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+bag_of_words_woll_fe= bag_of_words_woll_fe %>% filter(!(word_new %in% c("women","woman")))
+word_count_woll_fe= bag_of_words_woll_fe %>% count(word_new, sort = TRUE)
+
+phil_beauv_auth=phil[phil$author=="Beauvoir",]
+i=1
+j=1
+rows_to_keep=c()
+for(i in seq_along(phil_beauv_auth$tokenized_txt)){
+  for(j in seq_along(word2)){
+     if(grepl(word2[j],phil_beauv_auth$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_beauv_fe=phil_beauv_auth[rows_to_keep,]
+bag_of_words_beauv_fe= phil_beauv_fe%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_beauv_fe= bag_of_words_beauv_fe %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+bag_of_words_beauv_fe= bag_of_words_beauv_fe %>% filter(!(word_new %in% c("women","woman")))
+word_count_beauv_fe= bag_of_words_beauv_fe %>% count(word_new, sort = TRUE)
+
+
+```
+
+The words of Wollstonecraft associated with "women" are very varied, and focus on a variety of topics and values such as "virtue", "character", and "respect", as well as nouns such as "mind" and "reason". This shows that Wollstonecraft's discussion of femininity is very nuanced and involves varied ideas regarding the advancement of women in multiple different spheres and aspects in society.
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE,error=TRUE}
+wordcloud(word_count_woll_fe$word_new,word_count_woll_fe$n ,
+          scale=c(3,0.2),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+The words of Beauvoir associated with "women" like Wollstonecraft are similarly very varied and nuanced, but seem to be more large scale and forward focued, with promiment words displayed including "destiny" and "life", beyond the subjects of "female" and "girl". This word cloud helps to show the variation that exists between the writings of authors within the same feminist school
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE,error=TRUE}
+wordcloud(word_count_beauv_fe$word_new,word_count_beauv_fe$n ,
+          scale=c(3,0.2),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+As opposed to the feminist writers of Wollstonecraft and Beauvoir, Aristotle's sentences interestingly show a larger prevalence of the counterpart of "males", but also focuses more heavily on the topic of sex and this interaction between men and women rather than women alone.
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE,error=TRUE}
+wordcloud(word_count_aristotle_fe$word_new,word_count_aristotle_fe$n ,
+          scale=c(3,0.2),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Blues"))
+```
+
+I also formulated a scatter plot of the words in sentences associated with femininity with the highest proportion in the writings of Wollstonecraft and Aristotle and compared them, to see which words were the most common between them. Two examples of these common words were "nature" and "reason", showing the commmon contexts in which the respective philosophers were examining the topic of femininity.
+
+```{r,warning=FALSE, message=FALSE,echo=FALSE,error=TRUE}
+phil_aristotle_woll_auth= phil[phil$author==c("Aristotle","Wollstonecraft"),]
+rows_to_keep=c()
+for(i in seq_along(phil_aristotle_woll_auth$tokenized_txt)){
+  for(j in seq_along(word2)){
+     if(grepl(word2[j],phil_aristotle_woll_auth$tokenized_txt[i])){
+    rows_to_keep=c(rows_to_keep,i)
+  }
+  }
+}
+phil_aristotle_woll_fe=phil_aristotle_woll_auth[rows_to_keep,]
+bag_of_words_aristotle_woll_fe= phil_aristotle_woll_fe%>% unnest_tokens(word_new,tokenized_txt)
+bag_of_words_aristotle_woll_fe= bag_of_words_aristotle_woll_fe %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
+bag_of_words_aristotle_woll_fe= bag_of_words_aristotle_woll_fe %>% filter(!(word_new %in% c("women","woman")))
+
+temp <- bag_of_words_aristotle_woll_fe %>%
+      count(author, word_new) %>%
+      group_by(author) %>%
+      mutate(proportion = n / sum(n)) %>% 
+      select(-n) %>% 
+      spread(author, proportion)
+
+ggplot(temp, 
+             aes_string(x = colnames(temp)[2], y = colnames(temp)[3]),
+             color = abs(colnames(temp)[3] - colnames(temp)[2])) +
+      geom_abline(color = "gray40", lty = 2) +
+      geom_jitter(alpha = 0.1, size = 1, width = 0.3, height = 0.3) +
+  labs(title="               Words Proportion in Topics on Women in Aristotle and Wollstonecraft")+
+      geom_text(aes(label = word_new), check_overlap = TRUE, vjust = 1) + scale_x_log10(labels = percent_format()) +
+      scale_y_log10(labels = percent_format()) +
+      scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
+      theme(legend.position="none")
+  
+```
+
+## Conclusions
+1. The German Idealism and Aristotle philosophical schools most heavily focused on the concept of "property" among the the schools listed in the data set.
+2. The German Idealism and Aristotle philosophical schools emphasize ideas of "power", "law", "nature", and "possession", showing a focus on societal implications and rights involved with property, while the Feminist school focuses more on the family unit and domestic life as it relates to property.
+3. The authors with the heaviest focus on the topic of "women" and "femininity" were Beauvoir, Davis, Wollstonecraft, and Aristotle.
+4.While Wollstonecraft and Beauvoir's discussion on the topic of "women" was more nuanced and included a variety of topics including "character", "mind", and "reason", older, male philosophical author of Aristotle focused more on the relationship of women with males, particular in the concept of sex. Overall, the data mining shows how the tone and contexts in regards to property and femininity changes over time between different philosophical schools and authors.
+
+
+
+
+
+
+
+
+
+
