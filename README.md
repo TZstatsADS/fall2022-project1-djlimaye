@@ -9,10 +9,13 @@ This is the first and only *individual* (as opposed to *team*) project this seme
 
 Term: Fall 2022
 
-+ Projec title: Lorem ipsum dolor sit amet
-+ This project is conducted by [your name]
++ Project title: Progression of Views on Property and Feminism in Philosophical History
++ This project is conducted by Dhruv Limaye
 
-+ Project summary: [a short summary] Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
++ Project summary: In this project, I looked at how different philosophical schools and authors in the philosophy database approached the concepts of property and femininity, and analyzed the differing contexts and tone associated with these concepts and how they changed over time. Through my analysis, I concluded that:
+The German Idealism and Aristotle philosophical schools most heavily focused on the concept of “property” among the the schools listed in the data set.
+The German Idealism and Aristotle philosophical schools emphasize ideas of “power”, “law”, “nature”, and “possession”, showing a focus on societal implications and rights involved with property, while the Feminist school focuses more on the family unit and domestic life as it relates to property.
+The authors with the heaviest focus on the topic of “women” and “femininity” were Beauvoir, Davis, Wollstonecraft, and Aristotle. 4.While Wollstonecraft and Beauvoir’s discussion on the topic of “women” was more nuanced and included a variety of topics including “character”, “mind”, and “reason”, older, male philosophical author of Aristotle focused more on the relationship of women with males, particular in the concept of sex. Overall, the data mining shows how the tone and contexts in regards to property and femininity changes over time between different philosophical schools and authors.
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
