@@ -94,16 +94,6 @@ bag_of_words_german_idealism_prop= phil_german_idealism_prop%>% unnest_tokens(wo
 bag_of_words_german_idealism_prop= bag_of_words_german_idealism_prop %>% filter(!(word_new %in% stopwords(source = "stopwords-iso")))
 word_count_german_idealism_prop= bag_of_words_german_idealism_prop %>% count(word_new, sort = TRUE)
 
-rows_to_keep=c()
-for(i in seq_along(bag_of_words_german_idealism$word_new)){
-  for(j in seq_along(word)){
-     if(bag_of_words_german_idealism$word_new[i]==word[j]){
-    rows_to_keep=c(rows_to_keep,i)
-  }
-  }
-}
-bag_of_words_german_idealism=bag_of_words_german_idealism[rows_to_keep,]
-
 #Repeat steps for Aristotle school
 phil_aristotle=phil[phil$school=="aristotle",]
 i=1
@@ -202,7 +192,7 @@ fe_school_plot
 fe_author=as.data.frame.table(tapply(phil$word_occurrence_fe, phil$author, FUN=sum))
 fe_author= fe_author %>% mutate(word_occurrence_proportion= Freq/sum(Freq))
 fe_author_plot<-ggplot(data=fe_author, aes(x=Var1, y=Freq), fill=Var1) +
-  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip()+ ggtitle("Frequency of Words Associated with 'Women' by School" ) +
+  geom_bar(stat="identity")+scale_fill_brewer(palette="Dark2")+coord_flip()+ ggtitle("Frequency of Words Associated with 'Women' by Author" ) +
   xlab("Frequency") + ylab("Author")
 fe_author_plot
 
@@ -340,7 +330,7 @@ ggplot(temp,
              color = abs(colnames(temp)[3] - colnames(temp)[2])) +
       geom_abline(color = "gray40", lty = 2) +
       geom_jitter(alpha = 0.1, size = 1, width = 0.3, height = 0.3) +
-  labs(title="               Words Proportion in Topics on Women in Aristotle and Wollstonecraft")+
+  labs(title="Words Proportion in Topics on Women in Aristotle and Wollstonecraft")+
       geom_text(aes(label = word_new), check_overlap = TRUE, vjust = 1) + scale_x_log10(labels = percent_format()) +
       scale_y_log10(labels = percent_format()) +
       scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
